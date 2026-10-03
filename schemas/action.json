@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omr-notifications/schemas/action-v1.json",
+  "title": "OmR Action v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["type", "config"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "type": {
+      "enum": ["notification.show", "notification.dismiss", "osd.show", "sound.play", "exec.argv", "listener.enable", "listener.disable", "event.record"]
+    },
+    "config": { "type": "object" }
+  }
+}

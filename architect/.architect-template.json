@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "installedAs": "architect",
+  "installedAt": "2026-10-02T20:17:52-04:00",
+  "installedFrom": {
+    "templateId": "architect-core",
+    "templateVersion": "1.0.0",
+    "sourcePath": "templates/core/architect-v1.0"
+  },
+  "overlays": [],
+  "installer": {
+    "name": "install-architect",
+    "version": "1.0.0"
+  }
+}

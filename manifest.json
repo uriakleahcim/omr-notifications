@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "uriak.omr-notifications",
+  "name": "OmR Notifications",
+  "version": "0.1.0",
+  "author": "uriak",
+  "license": "MIT",
+  "description": "A local event-policy runtime for bounded Omarchy notifications and automation.",
+  "kinds": [
+    "service",
+    "bar-widget"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "service": "Service.qml",
+    "barWidget": "Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "OmR Notifications",
+    "description": "Runtime status, pause controls, and event-policy diagnostics.",
+    "category": "System",
+    "aliases": [
+      "notifications",
+      "events",
+      "automation",
+      "policies"
+    ],
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {},
+    "schema": []
+  }
+}

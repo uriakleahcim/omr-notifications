@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omr-notifications/schemas/impact-v1.json",
+  "title": "OmR Impact Descriptor v1",
+  "type": "object",
+  "required": ["schemaVersion", "listenerId", "listenerType", "resident", "sharedRuntime", "configuredRoots", "dataClasses", "capturesContent", "sensitive", "fingerprint", "acknowledgementRequired"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "listenerId": { "type": "string" },
+    "listenerType": { "type": "string" },
+    "resident": { "type": "boolean" },
+    "sharedRuntime": { "type": "boolean" },
+    "pollSeconds": { "type": ["number", "null"], "exclusiveMinimum": 0 },
+    "configuredRoots": { "type": "array", "items": { "type": "string" } },
+    "estimatedWatchRoots": { "type": "integer", "minimum": 0 },
+    "residentChildProcesses": { "type": "integer", "minimum": 0 },
+    "maySpawnTransientProcesses": { "type": "boolean" },
+    "requiresPrivileges": { "type": "boolean" },
+    "dataClasses": { "type": "array", "items": { "type": "string" } },
+    "capturesContent": { "type": "boolean" },
+    "sensitive": { "type": "boolean" },
+    "recursive": { "type": "boolean" },
+    "fingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "acknowledgementRequired": { "type": "boolean" }
+  }
+}

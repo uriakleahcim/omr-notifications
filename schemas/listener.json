@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omr-notifications/schemas/listener-v1.json",
+  "title": "OmR Listener v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "type", "enabled", "config"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "type": {
+      "enum": ["time.after", "time.at", "time.schedule", "media.mpris", "omarchy.hook", "filesystem.watch", "trash.watch", "screenshot.watch", "explicit.ingress"]
+    },
+    "enabled": { "type": "boolean" },
+    "config": { "type": "object" }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "id": "2026-10-02-omr-notifications-event-policy-engine",
+  "title": "OmR Notifications Event-Policy Engine",
+  "status": "active",
+  "createdAt": "2026-10-02T20:19:13-04:00",
+  "activatedAt": "2026-10-03T12:44:55-04:00",
+  "resolvedAt": null,
+  "discontinuedAt": null,
+  "archivedAt": null,
+  "updatedAt": "2026-10-03T12:44:55-04:00",
+  "tags": [
+    "omarchy",
+    "quickshell",
+    "notifications",
+    "event-policy",
+    "automation",
+    "mpris",
+    "systemd",
+    "inotify",
+    "privacy",
+    "resource-preflight"
+  ],
+  "related": [],
+  "sourceReports": [],
+  "origin": {
+    "source": "chat",
+    "summary": "User requested a documentation-only Architect Protocol scaffold after defining OmR Notifications as an Omarchy event-policy engine with time, media, screenshot, filesystem, hook, notification, resource-impact, and future provider capabilities."
+  },
+  "events": [
+    {
+      "at": "2026-10-02T20:19:13-04:00",
+      "type": "CREATED",
+      "note": "Created as a pending product and architecture package during the documentation-only repository scaffold."
+    },
+    {
+      "at": "2026-10-02T20:45:15-04:00",
+      "type": "UPDATED",
+      "note": "Companion-mode implementation authorized and scheduled for a bounded source-only run beginning 2026-10-03 at 02:30 EDT. The scheduled run will activate this entry before implementation."
+    },
+    {
+      "at": "2026-10-03T12:44:55-04:00",
+      "type": "ACTIVATED",
+      "note": "User explicitly re-authorized implementation after the transient overnight timer was lost during reboot. Activated for a source-only Companion-mode build."
+    }
+  ]
+}

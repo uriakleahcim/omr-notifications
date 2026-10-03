@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omr-notifications/schemas/policy-v1.json",
+  "title": "OmR Policy v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "enabled", "priority", "trigger", "actions"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "enabled": { "type": "boolean" },
+    "priority": { "type": "integer" },
+    "trigger": {
+      "type": "object",
+      "required": ["types"],
+      "properties": {
+        "types": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "listenerIds": { "type": "array", "items": { "type": "string" } },
+        "origins": { "type": "array", "items": { "type": "string" } },
+        "allowSelf": { "type": "boolean" }
+      }
+    },
+    "conditions": { "type": "array", "items": { "type": "object" } },
+    "controls": { "type": "object" },
+    "actions": { "type": "array", "minItems": 1, "items": { "$ref": "action.json" } },
+    "terminal": { "type": "boolean" },
+    "errorStrategy": { "enum": ["continue", "stop-policy", "stop-event"] }
+  }
+}

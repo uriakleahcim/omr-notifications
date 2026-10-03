@@ -1,0 +1,14 @@
+{
+  "type": "time.after",
+  "listenerId": "welcome-delay",
+  "adapter": "fixture",
+  "provenance": "explicit",
+  "sensitivity": "local",
+  "origin": "fixture",
+  "occurredAt": "2026-10-03T12:00:00Z",
+  "observedAt": "2026-10-03T12:00:00Z",
+  "data": {
+    "scheduledFor": "2026-10-03T12:00:00Z",
+    "missed": false
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omr-notifications/schemas/config-v1.json",
+  "title": "OmR Configuration v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "revision", "listeners", "policies"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "revision": { "type": "integer", "minimum": 1 },
+    "paused": { "type": "boolean" },
+    "limits": { "type": "object" },
+    "retention": { "type": "object" },
+    "listeners": { "type": "array", "items": { "$ref": "listener.json" } },
+    "policies": { "type": "array", "items": { "$ref": "policy.json" } },
+    "impactAcknowledgements": { "type": "array", "items": { "type": "string" } }
+  }
+}

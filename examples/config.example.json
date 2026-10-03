@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "revision": 1,
+  "paused": false,
+  "retention": {
+    "enabled": true,
+    "sensitive": false
+  },
+  "listeners": [
+    {
+      "id": "welcome-delay",
+      "type": "time.after",
+      "enabled": true,
+      "config": {
+        "seconds": 5
+      }
+    },
+    {
+      "id": "local-hooks",
+      "type": "omarchy.hook",
+      "enabled": true,
+      "config": {
+        "hooks": ["theme-set", "font-set"]
+      }
+    }
+  ],
+  "policies": [
+    {
+      "id": "welcome-notification",
+      "enabled": true,
+      "priority": 100,
+      "trigger": {
+        "types": ["time.after"],
+        "listenerIds": ["welcome-delay"]
+      },
+      "conditions": [],
+      "controls": {
+        "cooldownSeconds": 60
+      },
+      "actions": [
+        {
+          "id": "welcome-popup",
+          "type": "notification.show",
+          "config": {
+            "title": "OmR Notifications",
+            "body": "The event-policy runtime is active.",
+            "replaceKey": "welcome",
+            "timeoutMs": 5000
+          }
+        },
+        {
+          "id": "record-welcome",
+          "type": "event.record",
+          "config": {}
+        }
+      ],
+      "terminal": false,
+      "errorStrategy": "continue"
+    }
+  ],
+  "impactAcknowledgements": []
+}

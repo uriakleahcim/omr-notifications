@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.omr-notifications/schemas/event-v1.json",
+  "title": "OmR Event v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "sequence", "type", "listenerId", "adapter", "observedAt", "provenance", "sensitivity", "origin", "correlationId", "causalDepth", "data"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "sequence": { "type": "integer", "minimum": 1 },
+    "type": { "type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)+$" },
+    "listenerId": { "type": "string", "minLength": 1 },
+    "adapter": { "type": "string", "minLength": 1 },
+    "occurredAt": { "type": ["string", "null"], "format": "date-time" },
+    "observedAt": { "type": "string", "format": "date-time" },
+    "provenance": { "enum": ["explicit", "observed", "inferred"] },
+    "sensitivity": { "enum": ["public", "local", "sensitive"] },
+    "origin": { "type": "string", "minLength": 1 },
+    "correlationId": { "type": "string", "minLength": 1 },
+    "causationId": { "type": ["string", "null"] },
+    "causalDepth": { "type": "integer", "minimum": 0 },
+    "data": { "type": "object" }
+  }
+}

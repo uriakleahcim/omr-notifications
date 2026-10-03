@@ -1,0 +1,13 @@
+{
+  "type": "omarchy.hook.theme-set",
+  "listenerId": "local-hooks",
+  "adapter": "fixture",
+  "provenance": "explicit",
+  "sensitivity": "local",
+  "origin": "fixture",
+  "occurredAt": "2026-10-03T12:00:00Z",
+  "observedAt": "2026-10-03T12:00:00Z",
+  "data": {
+    "theme": "Tokyo Night"
+  }
+}
