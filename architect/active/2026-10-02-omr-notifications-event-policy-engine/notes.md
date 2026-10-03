@@ -176,5 +176,6 @@ the current Omarchy tree before implementation.
 - Added the `codex-notify` adapter for Codex's supported
   `agent-turn-complete` notifier payload. It forwards only project/cwd and
   thread/turn identifiers; prompt and assistant-response text are discarded.
-- Added an OpenAI SVG asset sourced through Iconify (`simple-icons:openai`) and a
+- Added the closest available Devicon AI SVG through Iconify
+  (`devicon:aiassistant`; `devicon:codex` is not published) and a
   symbolic `smart_toy` icon for the reduced Omacale fallback path.

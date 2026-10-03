@@ -89,7 +89,7 @@
             "urgency": "normal",
             "timeoutMs": 8000,
             "icon": "smart_toy",
-            "image": "simple-icons-openai.svg",
+            "image": "devicon-aiassistant.svg",
             "replaceKey": "codex-${event.data.threadId}"
           }
         }
