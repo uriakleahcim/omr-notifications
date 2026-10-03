@@ -159,8 +159,11 @@ an `exec.argv` action. Unknown options and invalid bounds fail validation.
 
 The richer path uses `omarchy notification send`. When the desktop has no
 FreeDesktop notification owner, OmR falls back to an Omacale toast; that
-fallback preserves title, body, urgency class, and the symbolic `icon`, but not
-the image, glyph, click action, replacement ID, app name, or requested timeout.
+fallback preserves title, body, urgency class, symbolic `icon`, local image,
+requested timeout, and logical replacement key through Omacale's `toastRich`
+IPC. Older Omacale versions use the legacy toast endpoint and lose the latter
+three fields. Glyph, click action, and app name remain unsupported by either
+fallback.
 
 ### Codex response-complete notifications
 

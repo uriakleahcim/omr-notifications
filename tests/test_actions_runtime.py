@@ -47,9 +47,55 @@ class ActionsAndRuntimeTests(unittest.TestCase):
         self.assertEqual("success", result.status)
         self.assertIn("Omacale", result.message)
         self.assertEqual(
-            ["omarchy-shell", "omacale", "toast", "info", "Hello", "World", "notifications_active"],
+            [
+                "omarchy-shell", "omacale", "toastRich", "info", "Hello", "World",
+                "notifications_active", "", "5000", "",
+            ],
             dispatcher._run.call_args_list[1].args[0],
         )
+
+    @patch("omr_notifications.actions.shutil.which", return_value="/usr/bin/tool")
+    def test_notification_uses_legacy_omacale_when_rich_ipc_is_absent(self, _which):
+        dispatcher = ActionDispatcher()
+        dispatcher._run = Mock(side_effect=[
+            ("failure", "exit code 1", "GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown"),
+            ("failure", "exit code 1", "Function toastRich not found"),
+            ("success", "", ""),
+        ])
+        result = dispatcher.dispatch({
+            "id": "popup", "type": "notification.show",
+            "config": {"title": "Hello", "body": "World", "urgency": "normal"},
+        }, self.event, "policy")
+        self.assertEqual("success", result.status)
+        self.assertIn("legacy", result.message)
+        self.assertEqual(
+            ["omarchy-shell", "omacale", "toast", "info", "Hello", "World", "notifications_active"],
+            dispatcher._run.call_args_list[2].args[0],
+        )
+
+    @patch("omr_notifications.actions.shutil.which", return_value="/usr/bin/tool")
+    def test_rich_omacale_fallback_receives_local_image_timeout_and_key(self, _which):
+        with tempfile.TemporaryDirectory() as raw:
+            assets = Path(raw)
+            (assets / "codex.svg").write_text("<svg/>", encoding="utf-8")
+            dispatcher = ActionDispatcher(assets_root=assets)
+            dispatcher._run = Mock(side_effect=[
+                ("failure", "exit code 1", "Call failed: The name is not activatable"),
+                ("success", "", ""),
+            ])
+            result = dispatcher.dispatch({
+                "id": "popup", "type": "notification.show",
+                "config": {
+                    "title": "Ready", "body": "Response complete", "urgency": "normal",
+                    "timeoutMs": 8000, "icon": "smart_toy", "image": "codex.svg",
+                    "replaceKey": "codex-thread",
+                },
+            }, self.event, "policy")
+            self.assertEqual("success", result.status)
+            self.assertEqual([
+                "omarchy-shell", "omacale", "toastRich", "info", "Ready", "Response complete",
+                "smart_toy", str((assets / "codex.svg").resolve()), "8000", "codex-thread",
+            ], dispatcher._run.call_args_list[1].args[0])
 
     def test_notification_detects_busctl_missing_provider_message(self):
         self.assertTrue(ActionDispatcher._notification_service_unavailable(

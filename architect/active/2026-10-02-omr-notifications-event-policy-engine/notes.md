@@ -178,4 +178,8 @@ the current Omarchy tree before implementation.
   thread/turn identifiers; prompt and assistant-response text are discarded.
 - Added the closest available Devicon AI SVG through Iconify
   (`devicon:aiassistant`; `devicon:codex` is not published) and a
-  symbolic `smart_toy` icon for the reduced Omacale fallback path.
+  symbolic `smart_toy` icon when the configured image is unavailable.
+- Added a backward-compatible Omacale `toastRich` fallback contract so local
+  images, timeouts, and replacement keys survive when no FreeDesktop
+  notification provider owns the bus name; older Omacale keeps working through
+  the original four-argument `toast` IPC.

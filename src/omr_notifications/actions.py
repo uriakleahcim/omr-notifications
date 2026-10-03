@@ -87,7 +87,7 @@ class ActionDispatcher:
         return ActionResult(action_id, kind, status, started, iso_time(), message, output[: self.output_bytes])
 
     def _run(self, argv: list[str], timeout: float | None = None, cwd: str | None = None) -> tuple[str, str, str]:
-        if not argv or not all(isinstance(x, str) and x for x in argv):
+        if not argv or not isinstance(argv[0], str) or not argv[0] or not all(isinstance(x, str) for x in argv):
             raise ValueError("argv must be a non-empty string array")
         completed = subprocess.run(
             argv,
@@ -183,15 +183,28 @@ class ActionDispatcher:
         if status == "failure" and self._notification_service_unavailable(output) and shutil.which("omarchy-shell"):
             toast_type = {"critical": "error", "normal": "info", "low": "info"}.get(urgency, "info")
             fallback_icon = str(config.get("icon", "notifications_active"))
-            fallback = self._run(["omarchy-shell", "omacale", "toast", toast_type, title, body, fallback_icon])
+            fallback_image = self._notification_image(str(config["image"])) if config.get("image") else ""
+            timeout_ms = int(config.get("timeoutMs", 5000))
+            fallback = self._run([
+                "omarchy-shell", "omacale", "toastRich", toast_type, title, body,
+                fallback_icon, fallback_image, str(timeout_ms), replace_key,
+            ])
             if fallback[0] == "success":
+                unavailable = [
+                    key for key in ("glyph", "appName", "onClickArgv")
+                    if key in config
+                ]
+                suffix = f"; unsupported options: {', '.join(unavailable)}" if unavailable else ""
+                return "success", "shown through Omacale rich toast fallback" + suffix, fallback[2]
+            legacy = self._run(["omarchy-shell", "omacale", "toast", toast_type, title, body, fallback_icon])
+            if legacy[0] == "success":
                 unavailable = [
                     key for key in ("glyph", "image", "appName", "onClickArgv", "replaceKey", "timeoutMs")
                     if key in config
                 ]
                 suffix = f"; unsupported options: {', '.join(unavailable)}" if unavailable else ""
-                return "success", "shown through Omacale toast fallback" + suffix, fallback[2]
-            return fallback
+                return "success", "shown through legacy Omacale toast fallback" + suffix, legacy[2]
+            return legacy
         if status == "success" and replace_key:
             first = output.splitlines()[0] if output else ""
             if first.isdigit():
