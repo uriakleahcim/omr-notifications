@@ -22,6 +22,14 @@
       "config": {
         "hooks": ["theme-set", "font-set"]
       }
+    },
+    {
+      "id": "codex-cli",
+      "type": "explicit.ingress",
+      "enabled": true,
+      "config": {
+        "eventTypes": ["codex.agent-turn-complete"]
+      }
     }
   ],
   "policies": [
@@ -52,6 +60,38 @@
           "id": "record-welcome",
           "type": "event.record",
           "config": {}
+        }
+      ],
+      "terminal": false,
+      "errorStrategy": "continue"
+    },
+    {
+      "id": "codex-response-complete",
+      "enabled": true,
+      "priority": 200,
+      "trigger": {
+        "types": ["codex.agent-turn-complete"],
+        "listenerIds": ["codex-cli"]
+      },
+      "conditions": [],
+      "controls": {
+        "groupBy": ["data.threadId"],
+        "cooldownSeconds": 1
+      },
+      "actions": [
+        {
+          "id": "codex-complete-popup",
+          "type": "notification.show",
+          "config": {
+            "title": "Codex response complete",
+            "body": "${event.data.project} is ready.",
+            "appName": "Codex",
+            "urgency": "normal",
+            "timeoutMs": 8000,
+            "icon": "smart_toy",
+            "image": "simple-icons-openai.svg",
+            "replaceKey": "codex-${event.data.threadId}"
+          }
         }
       ],
       "terminal": false,

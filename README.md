@@ -4,7 +4,7 @@
 runtime for Omarchy. It observes explicitly enabled sources, normalizes events,
 evaluates deterministic policies, and dispatches bounded actions.
 
-This repository contains a source-complete Companion-mode v0.1. Its reviewed
+This repository contains a source-complete Companion-mode v0.2. Its reviewed
 snapshot is installed and enabled in the local Omarchy desktop; the source,
 installed snapshot, live configuration, and running process remain distinct.
 
@@ -35,6 +35,10 @@ Source Adapter -> Listener -> Immutable Event -> Policy -> Typed Actions
   OSD, sound, literal argv execution, listener state, and bounded recording.
 - Notification actions prefer the FreeDesktop service and fall back to
   Omacale's scoped toast IPC when that desktop service has no owner.
+- Rich notifications support a glyph, urgency, timeout, icon, image, app name,
+  logical replacement, and an optional literal click-action argv.
+- A privacy-minimized Codex CLI notifier maps `agent-turn-complete` to an
+  explicit OmR ingress event without retaining prompt or response text.
 - Machine-readable resource/privacy preflight with acknowledgement
   fingerprints.
 
@@ -145,6 +149,35 @@ not evaluate expressions. `exec.argv` passes each rendered entry as one literal
 argument with `shell=False`; the child receives the current environment, no
 stdin, an optional resolved working directory, a timeout, and truncated output.
 
+### Notification options
+
+`notification.show` accepts `title`, `body`, `glyph`, `urgency`, `timeoutMs`,
+`icon`, `image`, `appName`, `replaceKey`, and `onClickArgv`. Relative image
+paths are confined to the plugin's `assets/` directory. Click actions use a
+literal argv array and require the same `"exec.argv"` impact acknowledgement as
+an `exec.argv` action. Unknown options and invalid bounds fail validation.
+
+The richer path uses `omarchy notification send`. When the desktop has no
+FreeDesktop notification owner, OmR falls back to an Omacale toast; that
+fallback preserves title, body, urgency class, and the symbolic `icon`, but not
+the image, glyph, click action, replacement ID, app name, or requested timeout.
+
+### Codex response-complete notifications
+
+The Codex integration is enabled by adding this user-level setting to
+`~/.codex/config.toml`:
+
+```toml
+notify = ["python3", "/home/uriak/.config/omarchy/plugins/uriak.omr-notifications/bin/omr-notifications", "codex-notify"]
+```
+
+Codex appends one JSON payload argument. OmR accepts only
+`agent-turn-complete`, extracts the working-directory name plus thread/turn
+identifiers, and deliberately discards `input-messages` and
+`last-assistant-message`. The corresponding listener and policy are included
+in `examples/config.example.json`. New Codex CLI processes pick up the setting;
+an already-running process may need to be restarted.
+
 ## Runtime data
 
 OmR keeps mutable data out of the plugin source:
@@ -167,6 +200,8 @@ Companion process for the shell lifetime; it does not install a systemd unit.
 `Panel.qml` exposes status, counters, pause/resume, and reload controls.
 Socket ownership is atomic: if Omarchy and a replacement bar both instantiate
 the service, only one Companion runs and the other instance reads shared status.
+The installed launcher disables bytecode writes so Python cache refreshes do
+not retrigger Omarchy's local-plugin file watcher.
 
 The current source snapshot is installed at
 `~/.config/omarchy/plugins/uriak.omr-notifications`, enabled immediately before

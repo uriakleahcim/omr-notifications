@@ -3,15 +3,15 @@
 ## Current State
 
 - assignmentStatus: active
-- lastUpdatedAt: 2026-10-03T14:26:00-04:00
+- lastUpdatedAt: 2026-10-03T14:59:00-04:00
 - objectiveId: `2026-10-02-omr-notifications-event-policy-engine`
 - primaryEntry:
   `architect/active/2026-10-02-omr-notifications-event-policy-engine`
 - branch: `main`
-- commit: initial repository snapshot; see Git history
+- commit: v0.2 implementation; see Git history
 - remote: `https://github.com/uriakleahcim/omr-notifications`
 
-The Companion-mode v0.1 source is implemented and its reviewed snapshot is
+The Companion-mode v0.2 source is implemented and its reviewed snapshot is
 installed and enabled as `uriak.omr-notifications`. Omarchy Shell owns one live
 Companion process; no user service or additional hook was installed.
 
@@ -52,6 +52,11 @@ the standard library. Optional media polling uses an already-installed
   it never reads file contents or follows directory symlinks recursively.
 - Provider mode, native inotify/MPRIS subscriptions, cron syntax, and a visual
   configuration editor are follow-ups, not hidden partial implementations.
+- Rich notification actions use `omarchy notification send` for glyph, icon,
+  image, timeout, app name, replacement, and click argv. Relative images stay
+  inside plugin `assets/`; click argv requires `"exec.argv"` acknowledgement.
+- Codex's supported user-level notifier maps only `agent-turn-complete` into an
+  explicit ingress event. Prompt and response bodies are deliberately omitted.
 
 ## Verification Performed
 
@@ -72,6 +77,11 @@ the standard library. Optional media polling uses an already-installed
   two configured listeners are active, and the status reports no last error.
 - A real `notification.show` action succeeded through the Omacale toast
   fallback because no FreeDesktop notification provider is currently active.
+- The v0.2 test suite passes 40 tests. A synthetic official-shape Codex payload
+  was accepted live, produced the popup, and left `failedActions` at zero.
+- Live status showed configuration revision 2, three active listeners, two
+  active policies, and exactly one Companion process. The Codex and OmR config
+  files remain mode `0600`.
 
 ## Known Limitations
 
@@ -95,9 +105,8 @@ tree, installed snapshot, and running shell instance.
 
 ## Safest Next Step
 
-For the next requested automation, review its data and impact scope, update the
-minimal XDG configuration, run preflight, synchronize the reviewed files into
-the installed snapshot, and verify the resulting live event/action path.
+Observe one natural callback from a newly started Codex CLI process. For later
+automation, retain the same payload-minimization and preflight boundaries.
 
 ## Integration Review (2026-10-03)
 
@@ -113,7 +122,7 @@ the installed snapshot, and verify the resulting live event/action path.
   commands stay an argv list. Focused core/event-runtime verification passed
   30 tests. No Keymap source, profile, installed copy, binding, or live
   notification was changed.
-- A Codex CLI response-complete integration is feasible through OmR's existing
-  `explicit.ingress` listener if a supported Codex completion hook invokes the
-  CLI emitter. Do not infer completion by globally scraping processes or
-  terminal contents; confirm the supported Codex hook surface first.
+- The supported Codex `notify` command is configured in user-level
+  `~/.codex/config.toml`; official documentation says it currently receives
+  `agent-turn-complete`. The OmR adapter is best-effort so a missing runtime can
+  never turn a completed Codex response into a CLI failure.

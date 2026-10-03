@@ -75,13 +75,20 @@
 
 ## Actions
 
-- [x] Implement Companion `notification.show` and owned logical replacement.
+- [x] Implement rich Companion `notification.show`, confined image assets,
+  literal click argv, and owned logical replacement.
 - [x] Implement owned `notification.dismiss`.
 - [x] Implement `osd.show`.
 - [x] Implement bounded `sound.play`.
 - [x] Implement literal, time-bounded `exec.argv`.
 - [x] Implement idempotent `listener.enable` and `listener.disable`.
 - [x] Implement sensitivity-aware `event.record`.
+
+## Integrations
+
+- [x] Implement a supported Codex CLI `agent-turn-complete` notifier bridge.
+- [x] Minimize the Codex event payload by excluding prompt and response text.
+- [x] Add a Codex completion listener, policy, icon asset, and fixture.
 
 ## UI and Diagnostics
 

@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from .integrations import codex_completion_event
 from .models import EventNormalizer
 from .paths import RuntimePaths
 from .persistence import Journal, atomic_write_json, read_json
@@ -80,6 +81,17 @@ def command_emit(args: argparse.Namespace, paths: RuntimePaths) -> int:
         return 2
     print_json(response)
     return 0 if response.get("ok") else 2
+
+
+def command_codex_notify(args: argparse.Namespace, paths: RuntimePaths) -> int:
+    """Best-effort Codex notifier: never make a completed turn fail."""
+    try:
+        event = codex_completion_event(json.loads(args.payload))
+        if event is not None:
+            send_request(paths, {"command": "emit", "event": event})
+    except (ConnectionError, OSError, json.JSONDecodeError, ValueError):
+        pass
+    return 0
 
 
 def command_status(paths: RuntimePaths) -> int:
@@ -175,6 +187,9 @@ def build_parser() -> argparse.ArgumentParser:
     emit.add_argument("--sensitivity", choices=["public", "local", "sensitive"], default="local")
     emit.add_argument("--origin", default="ingress.cli")
 
+    codex = commands.add_parser("codex-notify", help="accept Codex agent-turn-complete payloads")
+    codex.add_argument("payload")
+
     commands.add_parser("status")
     commands.add_parser("pause")
     commands.add_parser("resume")
@@ -206,6 +221,8 @@ def main(argv: list[str] | None = None) -> int:
         return command_preflight(args, paths)
     if args.command == "emit":
         return command_emit(args, paths)
+    if args.command == "codex-notify":
+        return command_codex_notify(args, paths)
     if args.command == "status":
         return command_status(paths)
     if args.command in {"pause", "resume", "reload", "shutdown"}:

@@ -61,10 +61,19 @@ class CompanionRuntime:
 
     def _effective_policies(self) -> list[dict[str, Any]]:
         acknowledged = set(self.config.get("impactAcknowledgements", []))
+
+        def executes_command(action: dict[str, Any]) -> bool:
+            return (
+                action.get("type") == "exec.argv"
+                or (
+                    action.get("type") == "notification.show"
+                    and bool(action.get("config", {}).get("onClickArgv"))
+                )
+            )
         return [
             policy for policy in self.config["policies"]
             if "exec.argv" in acknowledged
-            or not any(action.get("type") == "exec.argv" for action in policy.get("actions", []))
+            or not any(executes_command(action) for action in policy.get("actions", []))
         ]
 
     def _apply_config(self) -> None:

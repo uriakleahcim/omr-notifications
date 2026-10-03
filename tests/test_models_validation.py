@@ -3,7 +3,7 @@ from __future__ import annotations
 import unittest
 
 from omr_notifications.models import EventNormalizer
-from omr_notifications.validation import ConfigError, default_config, impact_for_listener, validate_config
+from omr_notifications.validation import ConfigError, default_config, impact_for_listener, preflight, validate_config
 
 
 class ModelsAndValidationTests(unittest.TestCase):
@@ -54,6 +54,43 @@ class ModelsAndValidationTests(unittest.TestCase):
         self.assertTrue(descriptor["acknowledgementRequired"])
         self.assertEqual(64, len(descriptor["fingerprint"]))
         self.assertFalse(descriptor["capturesContent"])
+
+    def notification_config(self, action_config):
+        config = default_config()
+        config["listeners"] = [{"id": "input", "type": "explicit.ingress", "enabled": True, "config": {}}]
+        config["policies"] = [{
+            "id": "notify", "priority": 1, "trigger": {"types": ["test.event"]},
+            "actions": [{"type": "notification.show", "config": action_config}],
+        }]
+        return config
+
+    def test_rich_notification_config_validates(self):
+        config = self.notification_config({
+            "title": "Done", "body": "Ready", "glyph": "C", "urgency": "critical",
+            "timeoutMs": -1, "icon": "smart_toy", "image": "codex.svg",
+            "appName": "Codex", "replaceKey": "thread",
+            "onClickArgv": ["codex", "resume", "abc"],
+        })
+        config["impactAcknowledgements"] = ["exec.argv"]
+        self.assertTrue(preflight(validate_config(config))["ready"])
+
+    def test_notification_rejects_unknown_and_invalid_options(self):
+        config = self.notification_config({
+            "title": "", "urgency": "urgent", "timeoutMs": True, "surprise": 1,
+            "onClickArgv": [],
+        })
+        with self.assertRaises(ConfigError) as raised:
+            validate_config(config)
+        message = str(raised.exception)
+        self.assertIn("unsupported keys", message)
+        self.assertIn("timeoutMs", message)
+        self.assertIn("onClickArgv", message)
+
+    def test_notification_click_requires_command_acknowledgement(self):
+        config = validate_config(self.notification_config({"onClickArgv": ["true"]}))
+        result = preflight(config)
+        self.assertTrue(result["commandActions"])
+        self.assertEqual(["exec.argv"], result["missingAcknowledgements"])
 
 
 if __name__ == "__main__":

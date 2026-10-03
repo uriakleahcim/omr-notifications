@@ -51,6 +51,48 @@ class ActionsAndRuntimeTests(unittest.TestCase):
             dispatcher._run.call_args_list[1].args[0],
         )
 
+    def test_notification_detects_busctl_missing_provider_message(self):
+        self.assertTrue(ActionDispatcher._notification_service_unavailable(
+            "Call failed: The name is not activatable"
+        ))
+
+    @patch("omr_notifications.actions.shutil.which", return_value="/usr/bin/tool")
+    def test_notification_builds_rich_omarchy_argv_and_tracks_replacement(self, _which):
+        with tempfile.TemporaryDirectory() as raw:
+            assets = Path(raw)
+            (assets / "codex.svg").write_text("<svg/>", encoding="utf-8")
+            dispatcher = ActionDispatcher(assets_root=assets)
+            dispatcher._run = Mock(return_value=("success", "", "42\n"))
+            result = dispatcher.dispatch({
+                "id": "popup", "type": "notification.show",
+                "config": {
+                    "title": "Ready", "body": "Response complete", "glyph": "C",
+                    "urgency": "low", "timeoutMs": 8000, "icon": "smart_toy",
+                    "image": "codex.svg", "appName": "Codex", "replaceKey": "turn",
+                    "onClickArgv": ["codex", "resume", "thread"],
+                },
+            }, self.event, "policy")
+            self.assertEqual("success", result.status)
+            self.assertEqual(42, dispatcher.notifications["turn"])
+            self.assertEqual([
+                "omarchy", "notification", "send", "--print-id",
+                "--app-name", "Codex", "--urgency", "low", "--expire-time", "8000",
+                "--glyph", "C", "--icon", "smart_toy",
+                "--image", str((assets / "codex.svg").resolve()),
+                "Ready", "Response complete", "--exec", "codex", "resume", "thread",
+            ], dispatcher._run.call_args.args[0])
+
+    @patch("omr_notifications.actions.shutil.which", return_value="/usr/bin/tool")
+    def test_notification_rejects_relative_image_escape(self, _which):
+        with tempfile.TemporaryDirectory() as raw:
+            dispatcher = ActionDispatcher(assets_root=Path(raw) / "assets")
+            result = dispatcher.dispatch({
+                "type": "notification.show",
+                "config": {"image": "../outside.svg"},
+            }, self.event, "policy")
+            self.assertEqual("failure", result.status)
+            self.assertIn("inside plugin assets", result.message)
+
     def make_runtime(self, root: Path, config: dict) -> CompanionRuntime:
         paths = RuntimePaths(root / "config", root / "state", root / "cache", root / "run")
         atomic_write_json(paths.config_file, config)
@@ -112,6 +154,20 @@ class ActionsAndRuntimeTests(unittest.TestCase):
             config["impactAcknowledgements"] = ["exec.argv"]
             runtime = self.make_runtime(Path(raw) / "open", config)
             self.assertEqual(["command"], [x["id"] for x in runtime.engine.policies])
+
+    def test_notification_click_policy_fails_closed_until_acknowledged(self):
+        with tempfile.TemporaryDirectory() as raw:
+            config = default_config()
+            config["listeners"] = [{"id": "input", "type": "explicit.ingress", "enabled": True, "config": {}}]
+            config["policies"] = [{
+                "id": "click", "priority": 1, "trigger": {"types": ["test.event"]},
+                "actions": [{"type": "notification.show", "config": {"onClickArgv": ["true"]}}],
+            }]
+            runtime = self.make_runtime(Path(raw) / "closed", config)
+            self.assertEqual([], runtime.engine.policies)
+            config["impactAcknowledgements"] = ["exec.argv"]
+            runtime = self.make_runtime(Path(raw) / "open", config)
+            self.assertEqual(["click"], [x["id"] for x in runtime.engine.policies])
 
     def test_stop_event_failure_skips_later_policy(self):
         with tempfile.TemporaryDirectory() as raw:

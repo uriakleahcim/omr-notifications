@@ -3,7 +3,7 @@
 ## Assignment Status
 
 - assignmentStatus: active
-- lastUpdatedAt: 2026-10-03T14:26:00-04:00
+- lastUpdatedAt: 2026-10-03T14:59:00-04:00
 - updatedBy: Codex
 - currentBranch: main
 - expectedBranch: main
@@ -17,12 +17,12 @@
   `architect/active/2026-10-02-omr-notifications-event-policy-engine`
 - goal: Deliver a bounded, deterministic Companion-mode event-policy runtime
   for Omarchy without taking over the desktop notification provider.
-- completedSlice: Source-complete v0.1 runtime, CLI, plugin host, schemas,
-  examples, documentation, unit/fixture tests, and isolated dry-run smoke test.
-- currentSlice: The reviewed source snapshot is installed, enabled, and live in
-  Omarchy Shell with one Companion owner and a responding status panel.
-- nextSlice: Review a narrowly scoped Codex CLI response-complete event source
-  with the user before choosing an ingress or hook integration.
+- completedSlice: Source-complete v0.2 runtime with rich notification actions,
+  a privacy-minimized Codex completion bridge, icon asset, tests, and docs.
+- currentSlice: The v0.2 snapshot and Codex notifier are installed and live in
+  Omarchy Shell with one Companion owner and a verified end-to-end popup.
+- nextSlice: Observe a real completion from a newly started Codex CLI process;
+  consider richer UI authoring separately.
 - completionCriteria: Source and authorized live behavior are both verified;
   future integrations retain separate approval and verification boundaries.
 
@@ -31,9 +31,8 @@
 - primary:
   `architect/active/2026-10-02-omr-notifications-event-policy-engine`
 - active: `2026-10-02-omr-notifications-event-policy-engine`
-- pendingFollowUps: Codex CLI response-complete integration; Provider mode;
-  richer configuration UI; native MPRIS and inotify backends; controlled
-  resource measurements
+- pendingFollowUps: Provider mode; richer configuration UI; native MPRIS and
+  inotify backends; controlled resource measurements
 - recentlyVerifiedResolved: none
 - related: none
 
@@ -61,16 +60,16 @@
 
 ## Last Run Summary
 
-- runEndedAt: 2026-10-03T14:26:00-04:00
-- outcome: source implementation live-verified and prepared for initial publish
-- workCompleted: Implemented Companion v0.1, activated the Architect record,
-  documented decisions, and ran source plus isolated socket/control smoke tests.
+- runEndedAt: 2026-10-03T14:59:00-04:00
+- outcome: rich notifications and Codex completion notifications live-verified
+- workCompleted: Added Keymap-level notification options, strict validation,
+  confined image handling, Codex ingress mapping/configuration, and live setup.
 - workPartiallyCompleted: Native MPRIS/inotify, cron expressions, graphical
   policy editing, and resource measurement remain follow-ups.
-- verificationSummary: 30 unit/fixture tests pass; Python compiles; all JSON
-  parses; config/preflight/CLI, dry-run ingress/control, live QML IPC,
-  single-instance ownership, and Omacale toast fallback were exercised.
-- commitCreated: initial repository snapshot (this commit)
+- verificationSummary: 40 unit/fixture tests pass; Python compiles; all JSON
+  parses; example and live preflight are ready; one live Codex event completed
+  with zero failed actions and one Companion owner.
+- commitCreated: v0.2 implementation commit (see Git history)
 
 ## Immediate Decisions
 
@@ -87,9 +86,9 @@
 
 ## Next Action
 
-Discuss the Codex CLI completion source and payload boundary with the user.
-Prefer an explicit local ingress event over process scraping if Codex exposes a
-supported completion hook; then add the smallest matching listener and policy.
+Start a new Codex CLI process and observe its first natural response-complete
+callback. The supported user-level `notify` hook is already configured; the
+current Codex process may retain its startup configuration until restarted.
 
 ## Verification Baseline
 

@@ -1,0 +1,14 @@
+{
+  "type": "codex.agent-turn-complete",
+  "listenerId": "codex-cli",
+  "adapter": "codex-notify",
+  "data": {
+    "project": "omr-notifications",
+    "cwd": "/home/uriak/Work/AppSource/com.github/omr-notifications",
+    "threadId": "fixture-thread",
+    "turnId": "fixture-turn"
+  },
+  "provenance": "explicit",
+  "sensitivity": "local",
+  "origin": "integration.codex-cli"
+}

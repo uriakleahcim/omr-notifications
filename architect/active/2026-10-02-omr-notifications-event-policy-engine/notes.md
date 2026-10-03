@@ -166,3 +166,15 @@ the current Omarchy tree before implementation.
   supported completion-hook surface and desired notification payload are
   discussed. The preferred design is narrow `explicit.ingress`, not process or
   terminal scraping.
+
+## Rich Notifications and Codex Bridge (2026-10-03)
+
+- Extended `notification.show` to the reviewed Keymap capability set: glyph,
+  urgency, timeout, icon, confined image, app name, logical replacement, and
+  optional literal click argv. Click commands share the fail-closed
+  `"exec.argv"` acknowledgement boundary.
+- Added the `codex-notify` adapter for Codex's supported
+  `agent-turn-complete` notifier payload. It forwards only project/cwd and
+  thread/turn identifiers; prompt and assistant-response text are discarded.
+- Added an OpenAI SVG asset sourced through Iconify (`simple-icons:openai`) and a
+  symbolic `smart_toy` icon for the reduced Omacale fallback path.

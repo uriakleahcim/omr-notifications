@@ -111,6 +111,29 @@ def _validate_condition(condition: Any, path: str, errors: list[str]) -> None:
         errors.append(f"{path}.value is required")
 
 
+def _validate_text(config: dict[str, Any], key: str, path: str, errors: list[str], *, nonempty: bool = False) -> None:
+    if key not in config:
+        return
+    value = config[key]
+    if not isinstance(value, str) or "\0" in value or (nonempty and not value.strip()):
+        qualifier = "non-empty " if nonempty else ""
+        errors.append(f"{path}.{key} must be a {qualifier}string without NUL bytes")
+
+
+def _validate_literal_argv(value: Any, path: str, errors: list[str]) -> None:
+    valid = (
+        isinstance(value, list)
+        and bool(value)
+        and all(isinstance(item, str) and "\0" not in item for item in value)
+        and bool(value[0])
+    )
+    if not valid:
+        errors.append(f"{path} must be a non-empty string array without NUL bytes")
+        return
+    if len(value) > 64 or sum(len(item.encode()) for item in value) > 16 * 1024:
+        errors.append(f"{path} exceeds 64 arguments or 16 KiB")
+
+
 def _validate_action(action: Any, path: str, errors: list[str]) -> None:
     if not _plain_object(action):
         errors.append(f"{path} must be an object")
@@ -127,10 +150,34 @@ def _validate_action(action: Any, path: str, errors: list[str]) -> None:
         return
     if kind == "exec.argv":
         argv = config.get("argv")
-        if not isinstance(argv, list) or not argv or not all(isinstance(x, str) and x for x in argv):
-            errors.append(f"{path}.config.argv must be a non-empty string array")
+        _validate_literal_argv(argv, f"{path}.config.argv", errors)
         if config.get("shell") is not None:
             errors.append(f"{path}.config.shell is forbidden")
+    if kind == "notification.show":
+        allowed = {
+            "title", "body", "glyph", "urgency", "timeoutMs", "icon", "image",
+            "appName", "replaceKey", "onClickArgv",
+        }
+        unknown = sorted(set(config) - allowed)
+        if unknown:
+            errors.append(f"{path}.config has unsupported keys: {', '.join(unknown)}")
+        _validate_text(config, "title", f"{path}.config", errors, nonempty=True)
+        _validate_text(config, "body", f"{path}.config", errors)
+        for key in ("glyph", "icon", "image", "appName", "replaceKey"):
+            _validate_text(config, key, f"{path}.config", errors, nonempty=True)
+        if config.get("urgency", "normal") not in {"low", "normal", "critical"}:
+            errors.append(f"{path}.config.urgency must be low, normal, or critical")
+        timeout_ms = config.get("timeoutMs", 5000)
+        if type(timeout_ms) is not int or not -1 <= timeout_ms <= 2_147_483_647:
+            errors.append(f"{path}.config.timeoutMs must be an integer from -1 through 2147483647")
+        if "onClickArgv" in config:
+            _validate_literal_argv(config["onClickArgv"], f"{path}.config.onClickArgv", errors)
+    if kind == "notification.dismiss":
+        if set(config) - {"replaceKey"}:
+            errors.append(f"{path}.config only supports replaceKey")
+        _validate_text(config, "replaceKey", f"{path}.config", errors, nonempty=True)
+        if "replaceKey" not in config:
+            errors.append(f"{path}.config.replaceKey is required")
     if kind in {"listener.enable", "listener.disable"} and not isinstance(config.get("listenerId"), str):
         errors.append(f"{path}.config.listenerId is required")
 
@@ -293,6 +340,7 @@ def preflight(config: dict[str, Any]) -> dict[str, Any]:
     descriptors = [impact_for_listener(x) for x in config["listeners"] if x.get("enabled", True)]
     command_actions = any(
         a.get("type") == "exec.argv"
+        or (a.get("type") == "notification.show" and bool(a.get("config", {}).get("onClickArgv")))
         for p in config["policies"]
         for a in p.get("actions", [])
     )

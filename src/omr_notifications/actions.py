@@ -7,6 +7,7 @@ import shutil
 import subprocess
 from pathlib import Path
 from typing import Any, Callable
+from urllib.parse import urlsplit
 from uuid import uuid4
 
 from .models import ActionResult, Event, iso_time
@@ -40,12 +41,15 @@ class ActionDispatcher:
         timeout: float = 10.0,
         output_bytes: int = 16 * 1024,
         dry_run: bool = False,
+        assets_root: Path | None = None,
         record: Callable[[Event, str | None, list[dict[str, Any]] | None], None] | None = None,
         set_listener: Callable[[str, bool, Event], bool] | None = None,
     ):
         self.timeout = timeout
         self.output_bytes = output_bytes
         self.dry_run = dry_run
+        self.assets_root = (assets_root or Path(__file__).resolve().parents[2] / "assets").absolute()
+        self.assets_root_resolved = self.assets_root.resolve()
         self.record = record
         self.set_listener = set_listener
         self.notifications: dict[str, int] = {}
@@ -101,30 +105,92 @@ class ActionDispatcher:
             return "success", "", output
         return "failure", f"exit code {completed.returncode}", output
 
-    def _notification_show(self, config: dict[str, Any]) -> tuple[str, str, str]:
-        if not shutil.which("notify-send"):
-            return "failure", "notify-send is unavailable", ""
+    @staticmethod
+    def _notification_service_unavailable(output: str) -> bool:
+        return (
+            "ServiceUnknown" in output
+            or "NameHasNoOwner" in output
+            or "The name is not activatable" in output
+            or ("org.freedesktop.Notifications" in output and any(marker in output for marker in (
+                "not activatable", "not provided",
+            )))
+        )
+
+    def _notification_image(self, raw: str) -> str:
+        if urlsplit(raw).scheme:
+            return raw
+        path = Path(raw).expanduser()
+        if path.is_absolute():
+            result = path.resolve()
+        else:
+            if self.assets_root.is_symlink():
+                raise ValueError("notification assets directory must not be a symlink")
+            result = (self.assets_root / path).resolve()
+            if not result.is_relative_to(self.assets_root_resolved) or result == self.assets_root_resolved:
+                raise ValueError("relative notification images must stay inside plugin assets")
+        if not result.is_file():
+            raise ValueError(f"notification image is not a file: {result}")
+        return str(result)
+
+    def _notification_argv(self, config: dict[str, Any]) -> list[str]:
         title = str(config.get("title", "OmR Notifications"))[:256]
         body = str(config.get("body", ""))[:4096]
-        argv = ["notify-send", "--app-name=OmR Notifications", "--print-id"]
         urgency = str(config.get("urgency", "normal"))
-        if urgency in {"low", "normal", "critical"}:
-            argv.append(f"--urgency={urgency}")
-        timeout_ms = int(max(0, min(120_000, int(config.get("timeoutMs", 5000)))))
-        argv.append(f"--expire-time={timeout_ms}")
+        timeout_ms = int(config.get("timeoutMs", 5000))
+        app_name = str(config.get("appName", "OmR Notifications"))
+        replace_key = str(config.get("replaceKey", ""))
+        replacement = self.notifications.get(replace_key) if replace_key else None
+
+        if shutil.which("omarchy"):
+            argv = [
+                "omarchy", "notification", "send", "--print-id",
+                "--app-name", app_name,
+                "--urgency", urgency,
+                "--expire-time", str(timeout_ms),
+            ]
+            for key, flag in (("glyph", "--glyph"), ("icon", "--icon")):
+                if config.get(key):
+                    argv.extend([flag, str(config[key])])
+            if config.get("image"):
+                argv.extend(["--image", self._notification_image(str(config["image"]))])
+            if replacement is not None:
+                argv.extend(["--replace-id", str(replacement)])
+            argv.extend([title, body])
+            if config.get("onClickArgv"):
+                argv.append("--exec")
+                argv.extend(str(item) for item in config["onClickArgv"])
+            return argv
+
+        if not shutil.which("notify-send"):
+            raise ValueError("neither omarchy notification send nor notify-send is available")
+        argv = [
+            "notify-send", f"--app-name={app_name}", "--print-id",
+            f"--urgency={urgency}", f"--expire-time={timeout_ms}",
+        ]
         if config.get("icon"):
             argv.extend(["--icon", str(config["icon"])])
-        replace_key = str(config.get("replaceKey", ""))
-        if replace_key and replace_key in self.notifications:
-            argv.extend(["--replace-id", str(self.notifications[replace_key])])
+        if replacement is not None:
+            argv.extend(["--replace-id", str(replacement)])
         argv.extend([title, body])
-        status, message, output = self._run(argv)
-        if status == "failure" and "org.freedesktop.DBus.Error.ServiceUnknown" in output and shutil.which("omarchy-shell"):
+        return argv
+
+    def _notification_show(self, config: dict[str, Any]) -> tuple[str, str, str]:
+        title = str(config.get("title", "OmR Notifications"))[:256]
+        body = str(config.get("body", ""))[:4096]
+        urgency = str(config.get("urgency", "normal"))
+        replace_key = str(config.get("replaceKey", ""))
+        status, message, output = self._run(self._notification_argv(config))
+        if status == "failure" and self._notification_service_unavailable(output) and shutil.which("omarchy-shell"):
             toast_type = {"critical": "error", "normal": "info", "low": "info"}.get(urgency, "info")
             fallback_icon = str(config.get("icon", "notifications_active"))
             fallback = self._run(["omarchy-shell", "omacale", "toast", toast_type, title, body, fallback_icon])
             if fallback[0] == "success":
-                return "success", "shown through Omacale toast fallback", fallback[2]
+                unavailable = [
+                    key for key in ("glyph", "image", "appName", "onClickArgv", "replaceKey", "timeoutMs")
+                    if key in config
+                ]
+                suffix = f"; unsupported options: {', '.join(unavailable)}" if unavailable else ""
+                return "success", "shown through Omacale toast fallback" + suffix, fallback[2]
             return fallback
         if status == "success" and replace_key:
             first = output.splitlines()[0] if output else ""
